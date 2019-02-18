@@ -1,0 +1,26 @@
+language: java
+jdk: oraclejdk9
+
+services:
+  - docker
+
+cache:
+  directories:
+    - .autoconf
+    - $HOME/.m2
+
+stages:
+  - test
+  - name: deploy
+    if: branch = master
+
+jobs:
+  include:
+  - stage: test
+    script: mvn clean verify
+  - stage: deploy
+    script:
+    - echo "$HEROKU_TOKEN" | docker login -u "$HEROKU_USERNAME" --password-stdin registry.heroku.com
+    - docker build -t registry.heroku.com/yx3017-simplewebapp/web .
+    - docker push registry.heroku.com/yx3017-simplewebapp/web
+    - heroku container:release web --app yx3017-simplewebapp
